@@ -1,0 +1,5 @@
+[masters]
+172.28.1.XXX ansible_user=centos ansible_private_key_file=keys/mongohost.pem
+[workers]
+172.28.2.XXX ansible_user=centos ansible_private_key_file=keys/mongohost.pem
+172.28.3.XXX ansible_user=centos ansible_private_key_file=keys/mongohost.pem
