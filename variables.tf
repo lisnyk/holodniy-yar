@@ -27,7 +27,7 @@ variable "azs" {
 }
 variable "vpc-fullcidr" {
     default = "172.28.0.0/16"
-  description = "the vpc cdir"
+  description = "the vpc cidr"
 }
 variable "Subnet-Private-AzA-CIDR" {
   default = ["172.28.1.0/24", "172.28.2.0/24", "172.28.3.0/24"]
@@ -38,11 +38,15 @@ variable "sub-ids" {
   type = "list"
   default = ["subnet-123", "subnet-456", "subnet-789"]
 }
-variable "key_name" {
-  default = "ssh-rsa AAAAB3Nzazcsgrgwrrgwrgsv......fwfewwsf user@test.com"
-  description = "the ssh key to use in the EC2 machines"
-}
 variable "DnsZoneName" {
   default = "test.com"
   description = "the internal dns name"
+}
+variable "key_path" {
+  description = "SSH Public Key path"
+  default = "keys/mongohost.pem"
+}
+variable "key_name" {
+  description = "Desired name of Keypair..."
+  default = "mongohost-key"
 }
