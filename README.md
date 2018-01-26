@@ -18,11 +18,4 @@ Please pay attention to variables.tf file, as it contains all of the customizabl
 2. Open a terminal shell on your system and navigate to the folder that contains files that you downloaded and reviewed in previous steps. Execute the following commands:
 	$ terraform init
 	$ terraform apply
-3. Once all items are created, there will be output on your screen displaying three IP addresses. The first address must replace n inventory/hosts file. Two other IP addresses should replace relevant entries in the Worker section. Using the editor of your choice,open inventory/hosts file and replace the first IP address entry (master) with the top IP address from terraform output. Perform the same with two other IP addresses, replacing relevant entries in the Worker section.
-Please finalize and save your work.
-4. Now we are ready can create a docker swarm cluster. Execute the following code:
-	$ ansible-playbook -i inventory/hosts playbook.yml
-
-### To Do
-Currently MongoDB Cluster configuration is not completed. This must be fixed before this code is ready for a final release.
-
+3. Once all items are created, there will be output on your screen displaying three IP addresses.These are the IP addresses of each EC2 instance
