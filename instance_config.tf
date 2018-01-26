@@ -34,6 +34,7 @@ resource "aws_instance" "MongoHost" {
     yum install docker-ce
     systemctl start docker
 
+    
     #Map Log volume to /logs
     mkfs -t ext4 /dev/xvdf
     mkdir /mongologs
@@ -42,6 +43,29 @@ resource "aws_instance" "MongoHost" {
     mkdir -p /dockerlocalstorage/data/mongodb
     mkdir -p /dockerlocalstorage/logs/mongodb
     mkdir -p /dockerlocalstorage/backup/mongodb
+    }
+    #Create MongoiDB Config File
+      provisioner "file" {
+      source      = "inventory/myapp.conf"
+      destination = "/tmp/admin.js"
+    }
+    #Create MongoiDB Key File
+      provisioner "file" {
+      source      = "inventory/mongo-keyfile"
+      destination = "/tmp/mongo-keyfile"
+    }
+    #Create ENV File
+      provisioner "file" {
+      source      = "inventory/env"
+      destination = "/tmp/env"
+    }
+
+  user_data {
+    #!/bin/bash
+    ip_addr=`hostname -i`
+    #Set correct permissions on key file
+    chmod 600 /tmp/mongo-keyfile
+
     # Deploy MongoDB container
     # The following code is a quick way to get mongo up and running,
     # but will not create a Mongo cluster
@@ -49,11 +73,35 @@ resource "aws_instance" "MongoHost" {
 
     docker pull mongo
     docker network create mongo-cluster
-    docker run \
+    docker volume create --name mongo_storage
+    
+    docker run --name mongo-${count.index} \
+    -v mongo_storage:/data \
+    -d mongo \
+    --smallfiles
+    docker exec mongo-${count.index} bash -c 'mkdir /mongodata/keyfile /mongodata/admin'
+    docker mv /tmp/admin.js mongo-${count.index}:/mongodata/admin/
+    docker mv /tmp/replica.js mongo-${count.index}:/mongodata/admin/
+    docker mv /tmp/mongo-keyfile mongo-${count.index}:/mongodata/keyfile/
+    docker mv /tmp/env mongo-${count.index}:/mongodata/keyfile/
+    docker exec mongo-${count.index} bash -c 'chown -R mongodb:mongodb /mongodata'
+    docker rm -f mongo-${count.index}
+
+    docker run --name mongo-${count.index} --hostname mongo-${count.index} \
+    -v mongo_storage:/mongodata \
+    --env-file /mongodata/keyfile/env \
+    --add-host manager1:mongo-1.${var.DnsZoneName} \
+    --add-host worker1:mongo-2.${var.DnsZoneName} \
+    --add-host worker2:mongo-3.${var.DnsZoneName} \
     -p 27017:27017 \
-    --name mongo-${count.index}.${var.DnsZoneName} \
-    --net mongo-cluster \
-    mongo mongod --replSet my-mongo-set
+    -d mongo --smallfiles \
+    --keyFile /mongodata/keyfile/mongo-keyfile \
+    --replSet 'rs1' \
+    --storageEngine wiredTiger \
+    --port 27017 \
+    --logpath /mongodata/logs/mongod.log
+    docker exec mongo-${count.index} bash -c 'mongo < /mongodata/admin/replica.js'
+    docker exec mongo-${count.index} -c 'mongo < /mongodata/admin/admin.js'
   }
 }
 

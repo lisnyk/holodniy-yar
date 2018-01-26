@@ -22,7 +22,7 @@
 - name: Join Swarm Cluster
     hosts: workers
     become: true
-    remote_user: ubuntu
+    remote_user: centos
     gather_facts: False
     vars:
       token: "{{ hostvars[groups['masters'][0]]['worker_token']['stdout'] }}"
